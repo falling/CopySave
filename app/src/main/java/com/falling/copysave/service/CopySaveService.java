@@ -21,6 +21,7 @@ import com.falling.copysave.application.MyApplication;
 import com.falling.copysave.bean.NoteBean;
 import com.falling.copysave.sharedutil.ShareUtil;
 
+import java.util.Calendar;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -30,7 +31,7 @@ import static android.content.ContentValues.TAG;
  * Created by falling on 2017/7/15.
  */
 
-public class CopySaveService extends Service {
+public class CopySaveService extends Service implements View.OnTouchListener{
 
 
     private ClipboardManager mManager;
@@ -43,6 +44,9 @@ public class CopySaveService extends Service {
     private int y = 0;
     private String mSaveContent;
     private Toast mToast;
+    public static final int MIN_CLICK_DELAY_TIME = 1000;
+    public static final int FLOAT_SHOW_TIME = 3000;
+    long lastClickTime = 0;
 
     @Override
     public void onCreate() {
@@ -102,34 +106,7 @@ public class CopySaveService extends Service {
                 .makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
         showFloatView();
 
-        //设置监听浮动窗口的触摸移动 等待优化
-        mFloatView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getEventTime() - event.getDownTime() < 1000) {
-                    renewTimer();
-                    return false;
-                }
-                x = (int) event.getRawX() - mFloatView.getMeasuredWidth() / 2;
-                //减25为状态栏的高度
-                y = (int) (event.getRawY() - mFloatView.getMeasuredHeight() / 2 - 25);
-                //刷新
-                wmParams.x = x;
-                wmParams.y = y;
-                mWindowManager.updateViewLayout(mFloatLayout, wmParams);
-                renewTimer();
-                return true;
-            }
-        });
-
-        mFloatView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                NoteBean note = new NoteBean(mSaveContent);
-                MyApplication.getNoteDao().save(note);
-                mToast.show();
-            }
-        });
+        mFloatView.setOnTouchListener(this);
     }
 
     private void showFloatView() {
@@ -150,7 +127,7 @@ public class CopySaveService extends Service {
                 hideFloatView();
                 ShareUtil.savePosition(CopySaveService.this, x, y);
             }
-        }, 3000);
+        }, FLOAT_SHOW_TIME);
     }
 
     private void hideFloatView() {
@@ -167,4 +144,37 @@ public class CopySaveService extends Service {
         return null;
     }
 
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+
+        x = (int) (event.getRawX() - mFloatView.getMeasuredWidth() / 2);
+        y = (int) (event.getRawY() - mFloatView.getMeasuredHeight() - 25);
+
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_MOVE:
+                if (event.getEventTime() - event.getDownTime() < 100) {
+                    return false;
+                }
+                wmParams.x = x;
+                wmParams.y = y;
+                mWindowManager.updateViewLayout(mFloatLayout, wmParams);
+                renewTimer();
+                return true;
+            case MotionEvent.ACTION_UP: // click
+                long now = Calendar.getInstance().getTimeInMillis();
+                if (event.getEventTime() - event.getDownTime() < 100
+                        && now - lastClickTime > MIN_CLICK_DELAY_TIME) {
+                    lastClickTime = now;
+                    NoteBean note = new NoteBean(mSaveContent);
+                    MyApplication.getNoteDao().save(note);
+                    mToast.show();
+                    mTimer.cancel();
+                    hideFloatView();
+                    ShareUtil.savePosition(CopySaveService.this, x, y);
+                }
+                break;
+            default:
+        }
+        return false;
+    }
 }
