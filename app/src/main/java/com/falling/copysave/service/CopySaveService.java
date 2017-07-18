@@ -48,7 +48,7 @@ public class CopySaveService extends Service {
     public void onCreate() {
         super.onCreate();
         int position[] = ShareUtil.getPosition(CopySaveService.this);
-        mToast = Toast.makeText(CopySaveService.this,"saved",Toast.LENGTH_SHORT);
+        mToast = Toast.makeText(CopySaveService.this, "saved", Toast.LENGTH_SHORT);
         x = position[0];
         y = position[1];
         mManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
@@ -61,7 +61,7 @@ public class CopySaveService extends Service {
                     CharSequence saveContent = mManager.getPrimaryClip().getItemAt(0).getText();
 
                     if (saveContent != null) {
-                        mSaveContent =saveContent.toString();
+                        mSaveContent = saveContent.toString();
                         createFloatView();
                     }
                 }
@@ -106,6 +106,10 @@ public class CopySaveService extends Service {
         mFloatView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                if (event.getEventTime() - event.getDownTime() < 1000) {
+                    renewTimer();
+                    return false;
+                }
                 x = (int) event.getRawX() - mFloatView.getMeasuredWidth() / 2;
                 //减25为状态栏的高度
                 y = (int) (event.getRawY() - mFloatView.getMeasuredHeight() / 2 - 25);
@@ -113,7 +117,8 @@ public class CopySaveService extends Service {
                 wmParams.x = x;
                 wmParams.y = y;
                 mWindowManager.updateViewLayout(mFloatLayout, wmParams);
-                return false;
+                renewTimer();
+                return true;
             }
         });
 
@@ -129,19 +134,23 @@ public class CopySaveService extends Service {
 
     private void showFloatView() {
         try {
-            mTimer.cancel();
-            mTimer = new Timer();
-            mTimer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    hideFloatView();
-                    ShareUtil.savePosition(CopySaveService.this,x,y);
-                }
-            }, 3000);
+            renewTimer();
             mWindowManager.addView(mFloatLayout, wmParams);
         } catch (Exception ignored) {
-            Log.d(TAG,ignored.getMessage());
+            Log.d(TAG, ignored.getMessage());
         }
+    }
+
+    private void renewTimer() {
+        mTimer.cancel();
+        mTimer = new Timer();
+        mTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                hideFloatView();
+                ShareUtil.savePosition(CopySaveService.this, x, y);
+            }
+        }, 3000);
     }
 
     private void hideFloatView() {
