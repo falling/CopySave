@@ -14,8 +14,12 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.falling.copysave.R;
+import com.falling.copysave.application.MyApplication;
+import com.falling.copysave.bean.NoteBean;
+import com.falling.copysave.sharedutil.ShareUtil;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -37,31 +41,27 @@ public class CopySaveService extends Service {
     private Timer mTimer = new Timer();
     private int x = 0;
     private int y = 0;
-
-    TimerTask task = new TimerTask() {
-        public void run() {
-            Log.d(TAG,"RUN");
-            hideFloatView();
-        }
-    };
-
+    private String mSaveContent;
+    private Toast mToast;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "start create");
+        int position[] = ShareUtil.getPosition(CopySaveService.this);
+        mToast = Toast.makeText(CopySaveService.this,"saved",Toast.LENGTH_SHORT);
+        x = position[0];
+        y = position[1];
         mManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-
         mManager.addPrimaryClipChangedListener(new ClipboardManager.OnPrimaryClipChangedListener() {
             @Override
             public void onPrimaryClipChanged() {
 
                 if (mManager.hasPrimaryClip() && mManager.getPrimaryClip().getItemCount() > 0) {
 
-                    CharSequence addedText = mManager.getPrimaryClip().getItemAt(0).getText();
+                    CharSequence saveContent = mManager.getPrimaryClip().getItemAt(0).getText();
 
-                    if (addedText != null) {
-                        Log.d(TAG, "copied text: " + addedText);
+                    if (saveContent != null) {
+                        mSaveContent =saveContent.toString();
                         createFloatView();
                     }
                 }
@@ -120,6 +120,9 @@ public class CopySaveService extends Service {
         mFloatView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                NoteBean note = new NoteBean(mSaveContent);
+                MyApplication.getNoteDao().save(note);
+                mToast.show();
             }
         });
     }
@@ -132,6 +135,7 @@ public class CopySaveService extends Service {
                 @Override
                 public void run() {
                     hideFloatView();
+                    ShareUtil.savePosition(CopySaveService.this,x,y);
                 }
             }, 3000);
             mWindowManager.addView(mFloatLayout, wmParams);
