@@ -19,7 +19,7 @@ import android.widget.Toast;
 import com.falling.copysave.R;
 import com.falling.copysave.application.MyApplication;
 import com.falling.copysave.bean.NoteBean;
-import com.falling.copysave.sharedutil.ShareUtil;
+import com.falling.copysave.util.ShareUtil;
 
 import java.util.Calendar;
 import java.util.Timer;

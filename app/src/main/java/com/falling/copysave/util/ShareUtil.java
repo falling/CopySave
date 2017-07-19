@@ -1,4 +1,4 @@
-package com.falling.copysave.sharedutil;
+package com.falling.copysave.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
