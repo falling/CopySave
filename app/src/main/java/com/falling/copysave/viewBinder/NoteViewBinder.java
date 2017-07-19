@@ -1,0 +1,57 @@
+package com.falling.copysave.viewBinder;
+
+import android.support.annotation.NonNull;
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.falling.copysave.R;
+import com.falling.copysave.bean.NoteBean;
+
+import me.drakeet.multitype.ItemViewBinder;
+
+/**
+ * Created by falling on 2017/7/19.
+ */
+
+public class NoteViewBinder  extends ItemViewBinder<NoteBean, NoteViewBinder.ViewHolder> {
+    @NonNull
+    @Override
+    protected NoteViewBinder.ViewHolder onCreateViewHolder(
+            @NonNull LayoutInflater inflater, @NonNull ViewGroup parent) {
+        View root = inflater.inflate(R.layout.item_note, parent, false);
+        return new ViewHolder(root);
+    }
+
+    @Override
+    protected void onBindViewHolder(@NonNull ViewHolder holder, @NonNull NoteBean noteBean) {
+        holder.id = noteBean.getId();
+        holder.copyContent.setText(noteBean.getCopyContent());
+        holder.comment.setText(noteBean.getComment());
+        holder.date.setText(noteBean.getDate().toString());
+    }
+
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        private long id;
+        @NonNull private final TextView copyContent;
+        @NonNull private final TextView comment;
+        @NonNull private final TextView date;
+
+        ViewHolder(View itemView) {
+            super(itemView);
+            copyContent = (TextView) itemView.findViewById(R.id.copyContent);
+            comment = (TextView) itemView.findViewById(R.id.comment);
+            date = (TextView) itemView.findViewById(R.id.date);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(v.getContext(),id + " clicked",Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
+}

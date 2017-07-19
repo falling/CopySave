@@ -148,7 +148,7 @@ public class CopySaveService extends Service implements View.OnTouchListener{
     public boolean onTouch(View v, MotionEvent event) {
 
         x = (int) (event.getRawX() - mFloatView.getMeasuredWidth() / 2);
-        y = (int) (event.getRawY() - mFloatView.getMeasuredHeight() - 25);
+        y = (int) (event.getRawY() - mFloatView.getMeasuredHeight());
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_MOVE:
