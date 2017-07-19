@@ -2,6 +2,7 @@ package com.falling.copysave.viewBinder;
 
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,7 +32,7 @@ public class NoteViewBinder  extends ItemViewBinder<NoteBean, NoteViewBinder.Vie
         holder.id = noteBean.getId();
         holder.copyContent.setText(noteBean.getCopyContent());
         holder.comment.setText(noteBean.getComment());
-        holder.date.setText(noteBean.getDate().toString());
+        holder.date.setText(DateFormat.format("yyyy-MM-dd hh:mm:ss",noteBean.getDate()));
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
