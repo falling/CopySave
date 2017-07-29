@@ -7,22 +7,24 @@ import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
 
 import com.falling.copysave.application.MyApplication;
 import com.falling.copysave.bean.NoteBean;
 import com.falling.copysave.green.NoteBeanDao;
 import com.falling.copysave.service.CopySaveService;
 import com.falling.copysave.util.DiffCallBack;
+import com.falling.copysave.view.MyRecyclerView;
 import com.falling.copysave.viewBinder.NoteViewBinder;
 
 import java.util.List;
 
 import me.drakeet.multitype.MultiTypeAdapter;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MyRecyclerView.RemoveListener{
 
-    private RecyclerView mRecyclerView;
+    private MyRecyclerView mRecyclerView;
     private MultiTypeAdapter adapter;
     private List<NoteBean> mItem;
     @Override
@@ -32,9 +34,10 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(MainActivity.this,CopySaveService.class);
         startService(intent);
 
-        mRecyclerView = (RecyclerView) findViewById(R.id.list);
+        mRecyclerView = (MyRecyclerView) findViewById(R.id.list);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
+        mRecyclerView.setRemoveListener(this);
 
         adapter = new MultiTypeAdapter();
         adapter.register(NoteBean.class, new NoteViewBinder());
@@ -63,5 +66,10 @@ public class MainActivity extends AppCompatActivity {
                 .queryBuilder()
                 .orderDesc(NoteBeanDao.Properties.Id)
                 .list();
+    }
+
+    @Override
+    public void removeItem(View view, MyRecyclerView.RemoveDirection direction,int position) {
+        Toast.makeText(view.getContext(),mItem.get(position).getId()+"",Toast.LENGTH_SHORT).show();
     }
 }

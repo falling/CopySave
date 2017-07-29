@@ -6,13 +6,13 @@
     android:layout_height="match_parent"
     tools:context="com.falling.copysave.MainActivity">
 
-    <android.support.v7.widget.RecyclerView
+    <com.falling.copysave.view.MyRecyclerView
         android:id="@+id/list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/colorBackground"
         >
 
-    </android.support.v7.widget.RecyclerView>
+    </com.falling.copysave.view.MyRecyclerView>
 
 </android.support.constraint.ConstraintLayout>
