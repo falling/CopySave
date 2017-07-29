@@ -225,8 +225,6 @@ public class MyRecyclerView extends RecyclerView {
                 if (mRemoveListener == null) {
                     throw new NullPointerException("RemoveListener is null, we should called setRemoveListener()");
                 }
-
-                itemView.scrollTo(0, 0);
                 mRemoveListener.removeItem(itemView,removeDirection, slidePosition);
             }
         }

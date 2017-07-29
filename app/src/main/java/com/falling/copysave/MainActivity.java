@@ -70,6 +70,8 @@ public class MainActivity extends AppCompatActivity implements MyRecyclerView.Re
 
     @Override
     public void removeItem(View view, MyRecyclerView.RemoveDirection direction,int position) {
-        Toast.makeText(view.getContext(),mItem.get(position).getId()+"",Toast.LENGTH_SHORT).show();
+        MyApplication.getNoteDao().deleteByKey(mItem.get(position).getId());
+        Toast.makeText(view.getContext(),"delete"+mItem.get(position).getId(),Toast.LENGTH_SHORT).show();
+        refresh();
     }
 }
