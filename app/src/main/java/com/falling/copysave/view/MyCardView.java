@@ -35,6 +35,7 @@ public class MyCardView extends CardView {
      * 用来指示item滑出屏幕的方向,向左或者向右,用一个枚举值来标记
      */
     private RemoveDirection removeDirection;
+    private int mVelocityX;
 
 
     // 滑动删除方向的枚举值
@@ -75,7 +76,6 @@ public class MyCardView extends CardView {
             case MotionEvent.ACTION_DOWN: {
                 addVelocityTracker(event);
 
-                // 假如scroller滚动还没有结束，我们直接返回
                 if (!scroller.isFinished()) {
                     return super.dispatchTouchEvent(event);
                 }
@@ -105,17 +105,15 @@ public class MyCardView extends CardView {
     }
 
     private void scrollRight() {
-        System.out.println("right");
         removeDirection = RemoveDirection.RIGHT;
         final int delta = (screenWidth + this.getScrollX());
-        scroller.startScroll(getLeft(), 0, screenWidth, 0, delta);
+        scroller.startScroll(getLeft(), 0, screenWidth, 0);
         postInvalidate();
     }
 
     private void scrollLeft() {
-        System.out.println("left");
         removeDirection = RemoveDirection.LEFT;
-        scroller.startScroll(getLeft(), 0, -screenWidth, 0, screenWidth);
+        scroller.startScroll(getLeft(), 0, -screenWidth, 0);
         postInvalidate();
     }
 
@@ -129,7 +127,6 @@ public class MyCardView extends CardView {
         } else if (this.getLeft() - layoutLeft <= -screenWidth / 2) {
             scrollLeft();
         } else {
-            System.out.println(layoutLeft);
             this.layoutTo(layoutLeft);
         }
 
@@ -146,29 +143,26 @@ public class MyCardView extends CardView {
             final int action = ev.getAction();
             int x = (int) ev.getRawX();
             switch (action) {
-                case MotionEvent.ACTION_DOWN:
-                    break;
                 case MotionEvent.ACTION_MOVE:
-                    MotionEvent cancelEvent = MotionEvent.obtain(ev);
-                    cancelEvent.setAction(MotionEvent.ACTION_CANCEL |
-                            (ev.getActionIndex() << MotionEvent.ACTION_POINTER_INDEX_SHIFT));
-                    onTouchEvent(cancelEvent);
                     int deltaX = x - downX;
                     downX = x;
                     this.layoutBy(deltaX);
-                    return true;
+                    mVelocityX = getScrollVelocity();
+                    return false;
                 case MotionEvent.ACTION_UP:
-                    int velocityX = getScrollVelocity();
-                    if (velocityX > SNAP_VELOCITY) {
-                        scrollRight();
-                    } else if (velocityX < -SNAP_VELOCITY) {
-                        scrollLeft();
+                    System.out.println(mVelocityX);
+                    if (mVelocityX > SNAP_VELOCITY || mVelocityX < -SNAP_VELOCITY) {
+                        if(getLeft()>layoutLeft){
+                            scrollRight();
+                        }else{
+                            scrollLeft();
+                        }
                     } else {
                         scrollByDistanceX();
                     }
                     recycleVelocityTracker();
                     isSlide = false;
-                    break;
+                    return true;
             }
         }
         return super.onTouchEvent(ev);
