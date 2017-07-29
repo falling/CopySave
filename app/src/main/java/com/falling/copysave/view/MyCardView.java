@@ -16,6 +16,10 @@ import android.widget.Scroller;
 public class MyCardView extends CardView {
     private int downY;
     private int downX;
+    private int layoutLeft;
+    private int layoutRight;
+    private int layoutTop;
+    private int layoutBottom;
     private int screenWidth;
     private Scroller scroller;
     private static final int SNAP_VELOCITY = 600;
@@ -23,6 +27,7 @@ public class MyCardView extends CardView {
     private boolean isSlide = false;
     private int mTouchSlop;
     /**
+     * downX
      * 移除item后的回调接口
      */
     private RemoveListener mRemoveListener;
@@ -74,14 +79,18 @@ public class MyCardView extends CardView {
                 if (!scroller.isFinished()) {
                     return super.dispatchTouchEvent(event);
                 }
-                downX = (int) event.getX();
-                downY = (int) event.getY();
+                downX = (int) event.getRawX();
+                downY = (int) event.getRawY();
+                layoutLeft = getLeft();
+                layoutRight = getRight();
+                layoutTop = getTop();
+                layoutBottom = getBottom();
                 break;
             }
             case MotionEvent.ACTION_MOVE: {
                 if (Math.abs(getScrollVelocity()) > SNAP_VELOCITY
-                        || (Math.abs(event.getX() - downX) > mTouchSlop && Math
-                        .abs(event.getY() - downY) < mTouchSlop)) {
+                        || (Math.abs(event.getRawX() - downX) > mTouchSlop && Math
+                        .abs(event.getRawY() - downY) < mTouchSlop)) {
                     isSlide = true;
 
                 }
@@ -95,27 +104,18 @@ public class MyCardView extends CardView {
         return super.dispatchTouchEvent(event);
     }
 
-    /**
-     * 往右滑动，getScrollX()返回的是左边缘的距离，就是以View左边缘为原点到开始滑动的距离，所以向右边滑动为负值
-     */
     private void scrollRight() {
+        System.out.println("right");
         removeDirection = RemoveDirection.RIGHT;
         final int delta = (screenWidth + this.getScrollX());
-        // 调用startScroll方法来设置一些滚动的参数，我们在computeScroll()方法中调用scrollTo来滚动item
-        scroller.startScroll(this.getScrollX(), 0, -delta, 0,
-                Math.abs(delta));
+        scroller.startScroll(getLeft(), 0, screenWidth, 0, delta);
         postInvalidate();
     }
 
-    /**
-     * 向左滑动，根据上面我们知道向左滑动为正值
-     */
     private void scrollLeft() {
+        System.out.println("left");
         removeDirection = RemoveDirection.LEFT;
-        final int delta = (screenWidth - this.getScrollX());
-        // 调用startScroll方法来设置一些滚动的参数，我们在computeScroll()方法中调用scrollTo来滚动item
-        scroller.startScroll(this.getScrollX(), 0, delta, 0,
-                Math.abs(delta));
+        scroller.startScroll(getLeft(), 0, -screenWidth, 0, screenWidth);
         postInvalidate();
     }
 
@@ -124,12 +124,13 @@ public class MyCardView extends CardView {
      */
     private void scrollByDistanceX() {
         // 如果向左滚动的距离大于屏幕的二分之一，就让其删除
-        if (this.getScrollX() >= screenWidth / 2) {
-            scrollLeft();
-        } else if (this.getScrollX() <= -screenWidth / 2) {
+        if (this.getLeft() - layoutLeft >= screenWidth / 2) {
             scrollRight();
+        } else if (this.getLeft() - layoutLeft <= -screenWidth / 2) {
+            scrollLeft();
         } else {
-            this.scrollTo(0, 0);
+            System.out.println(layoutLeft);
+            this.layoutTo(layoutLeft);
         }
 
     }
@@ -143,7 +144,7 @@ public class MyCardView extends CardView {
             requestDisallowInterceptTouchEvent(true);
             addVelocityTracker(ev);
             final int action = ev.getAction();
-            int x = (int) ev.getX();
+            int x = (int) ev.getRawX();
             switch (action) {
                 case MotionEvent.ACTION_DOWN:
                     break;
@@ -152,10 +153,9 @@ public class MyCardView extends CardView {
                     cancelEvent.setAction(MotionEvent.ACTION_CANCEL |
                             (ev.getActionIndex() << MotionEvent.ACTION_POINTER_INDEX_SHIFT));
                     onTouchEvent(cancelEvent);
-                    int deltaX = downX - x;
+                    int deltaX = x - downX;
                     downX = x;
-                    // 手指拖动itemView滚动, deltaX大于0向左滚动，小于0向右滚
-                    this.scrollBy(deltaX, 0);
+                    this.layoutBy(deltaX);
                     return true;
                 case MotionEvent.ACTION_UP:
                     int velocityX = getScrollVelocity();
@@ -179,17 +179,13 @@ public class MyCardView extends CardView {
         // 调用startScroll的时候scroller.computeScrollOffset()返回true，
         if (scroller.computeScrollOffset()) {
             // 让ListView item根据当前的滚动偏移量进行滚动
-            this.scrollTo(scroller.getCurrX(), scroller.getCurrY());
-
+            this.layoutTo(scroller.getCurrX());
             postInvalidate();
-
             // 滚动动画结束的时候调用回调接口
             if (scroller.isFinished()) {
                 if (mRemoveListener == null) {
                     throw new NullPointerException("RemoveListener is null, we should called setRemoveListener()");
                 }
-
-                this.scrollTo(0, 0);
                 mRemoveListener.removeItem(this, removeDirection);
             }
         }
@@ -221,6 +217,14 @@ public class MyCardView extends CardView {
     private int getScrollVelocity() {
         velocityTracker.computeCurrentVelocity(1000);
         return (int) velocityTracker.getXVelocity();
+    }
+
+    private void layoutBy(int offsetX) {
+        layout(getLeft() + offsetX, getTop(), getRight() + offsetX, getBottom());
+    }
+
+    private void layoutTo(int x) {
+        layout(x, layoutTop, layoutRight - layoutLeft + x, layoutBottom);
     }
 
     public interface RemoveListener {
