@@ -11,11 +11,11 @@ import java.util.List;
  */
 
 public class DiffCallBack extends DiffUtil.Callback {
-    private List<NoteBean> mOldDatas, mNewDatas;//看名字
+    private List<NoteBean> mOldDatas, mNewDatas;
 
     public DiffCallBack(List<NoteBean> oldDatas, List<NoteBean> newDatas) {
-        this.mOldDatas = mOldDatas;
-        this.mNewDatas = mNewDatas;
+        this.mOldDatas = oldDatas;
+        this.mNewDatas = newDatas;
     }
 
     @Override
